@@ -1,6 +1,7 @@
 #clion
 cmake-build-debug
 .idea
+build/
 
 #gedit garbage
 *~

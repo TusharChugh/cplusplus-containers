@@ -14,8 +14,8 @@ enable_testing()
 
 file(GLOB TEST_FILES ${PROJECT_SOURCE_DIR}/test/string/*.cpp)
 
-add_executable(container_test  unit_tests.cpp ${TEST_FILES})
-target_link_libraries(container_test ${GTEST_LIBRARIES} container pthread)
+add_executable(unittest_container unit_tests.cpp ${TEST_FILES})
+target_link_libraries(unittest_container ${GTEST_LIBRARIES} container pthread)
 
 include(CodeCoverage)
-setup_target_for_coverage(container_coverage container_test coverage)
+setup_target_for_coverage(container_coverage unittest_container coverage)
