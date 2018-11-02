@@ -1,4 +1,4 @@
-opyright (c) 2012 - 2015, Lars Bilke
+#Copyright (c) 2012 - 2015, Lars Bilke
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without modification,

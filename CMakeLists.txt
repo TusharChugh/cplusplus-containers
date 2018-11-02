@@ -8,4 +8,4 @@ include_directories(include)
 add_subdirectory(src)
 target_link_libraries(container)
 
-#add_subdirectory(test)
+add_subdirectory(test)
