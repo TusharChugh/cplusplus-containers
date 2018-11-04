@@ -1,65 +1,24 @@
-# Use new trusty images, should yield newer compilers and packages
-sudo: required
-dist: precise
-language: cpp
+sudo: false
 
-env:
-  global:
-    # Ubuntu version
-    - LINUX_DIST=trusty
-    - DEPS_DIR=${TRAVIS_BUILD_DIR}/deps
-    # Global build options and C++ flags
-    - CXX_FLAGS="-Wall -pedantic -Werror -Wno-variadic-macros -Wno-long-long -Wno-shadow"
-    # Misc
-    - RUN_TESTS=true
-    - COVERAGE=false
+language:
+  - cpp
 
-matrix:
-  include:
-    - compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-6
-            - valgrind
-            - lcov
-            - libgtest-dev
-      env: COMPILER=g++-6
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
 
 before_install:
-  - sudo apt-get update -qq
-  - export CMAKE_OPTIONS=${CMAKE_OPTIONS}" "${ENV_CMAKE_OPTIONS}
-  - export CXX_FLAGS=${CXX_FLAGS}" "${ENV_CXX_FLAGS}
-  - chmod +x build.sh
-  - cd /usr/src/gtest
-  - sudo cmake CMakeLists.txt
-  - sudo make
-  - sudo cp *.a /usr/lib
-  - cd -
-
-install:
-    - pip install --user cpp-coveralls
-    # Download and install recent cmake
-    - |
-      if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
-        CMAKE_URL="https://cmake.org/files/v3.12/cmake-3.12.4.tar.gz"
-        mkdir -p ${DEPS_DIR}/cmake
-        travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C ${DEPS_DIR}/cmake
-        export PATH=${DEPS_DIR}/cmake/bin:${PATH}
-      fi
-    - echo ${PATH}
-    - echo ${CXX}
-    - ${CXX} --version
-    - ${CXX} -v
-    - cmake --version
+  - pip install --user cpp-coveralls
 
 script:
-  - mkdir build
+  - cmake -H. -Bbuild
   - cd build
-  - cmake ${CMAKE_OPTIONS} -DCMAKE_CXX_FLAGS=${CXX_FLAGS} -DCMAKE_CXX_COMPILER=$COMPILER -DCMAKE_BUILD_TYPE=ON -DBUILD_TESTS=ON .. && make
+  - cmake --build .
+  - ctest
 
 after_success:
-    - coveralls --root .. -E ".*external.*" -E ".*CMakeFiles.*" -E ".*test/.*.cpp.*"
+  - coveralls --root .. -E ".*external.*" -E ".*CMakeFiles.*" -E ".*test/.*.cpp.*"
 
+notifications:
+  email: false
