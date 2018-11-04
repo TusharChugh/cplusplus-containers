@@ -55,13 +55,6 @@ const char * Container::String::c_str() const noexcept {
     return _str;
 }
 
-void Container::swap(String & str1, String & str2) noexcept {
-    //enabling ADL with swap is not useful for our case as cstring and int don't have their own swap methods)
-    using std::swap;
-    swap(str1._str, str2._str);
-    swap(str1._str_len, str2._str_len);
-}
-
 //Operators
 Container::String & Container::String::operator=(String str) {
     swap(*this, str);
@@ -99,6 +92,13 @@ const char& Container::String::operator[](size_t index) const {
 std::ostream& operator<<(std::ostream& os, const Container::String str) {
     os<<str.c_str();
     return os;
+}
+
+void Container::swap(String & str1, String & str2) noexcept {
+    //enabling ADL with swap is not useful for our case as cstring and int don't have their own swap methods)
+    using std::swap;
+    swap(str1._str, str2._str);
+    swap(str1._str_len, str2._str_len);
 }
 
 //Utilities

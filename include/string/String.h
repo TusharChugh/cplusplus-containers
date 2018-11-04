@@ -9,6 +9,10 @@
 const static char * STRING_VERSION = "0.0.1";
 
 namespace Container {
+    class String;
+
+    void swap(String & str1, String & str2) noexcept;
+
     class String {
 
     public:
