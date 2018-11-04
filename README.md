@@ -1,6 +1,6 @@
 
 [![Build Status](https://travis-ci.org/TusharChugh/cplusplus-containers.svg?branch=master)](https://travis-ci.org/TusharChugh/cplusplus-containers)
-
+[![Coverage Status](https://coveralls.io/repos/github/TusharChugh/cplusplus-containers/badge.svg?branch=master)](https://coveralls.io/github/TusharChugh/cplusplus-containers?branch=master)
 
 ## update cmake
 [help](https://www.claudiokuenzler.com/blog/755/install-upgrade-cmake-3.10.1-ubuntu-14.04-trusty-alternatives#.W9zw2XXwbCI)
