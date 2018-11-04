@@ -12,10 +12,11 @@ before_install:
   - pip install --user cpp-coveralls
 
 script:
-  - cmake -H. -Bbuild
+  - mkdir build
   - cd build
-  - cmake --build .
-  - ctest
+  - cmake ..
+  - make
+  - ./bin/unittest_container
 
 after_success:
   - coveralls --root .. -E ".*external.*" -E ".*CMakeFiles.*" -E ".*test/.*.cpp.*"
