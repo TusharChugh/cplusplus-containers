@@ -139,7 +139,7 @@ FUNCTION(SETUP_TARGET_FOR_COVERAGE _targetname _testrunner _outputname)
     ADD_CUSTOM_TARGET(${_targetname}
 
             # Cleanup lcov
-            ${LCOV_PATH} --directory . --zerocounters
+            ${LCOV_PATH} --directory ../.travis/cmake --zerocounters
 
             # Run tests
             COMMAND ${test_command} ${ARGV3}
@@ -149,7 +149,7 @@ FUNCTION(SETUP_TARGET_FOR_COVERAGE _targetname _testrunner _outputname)
             COMMAND g++ --version
 
             # Capturing lcov counters and generating report
-            COMMAND ${LCOV_PATH} --directory . --base-directory . --capture --output-file coverage.info
+            COMMAND ${LCOV_PATH} --directory ../.travis/cmake --base-directory ../.travis/cmake --capture --output-file coverage.info
             COMMAND ${LCOV_PATH} --remove coverage.info '/usr*' '*/test/*' '*/ext/*' -o coverage.info
 
             #COMMAND ${LCOV_PATH} --directory . --capture --output-file ${coverage_info}
