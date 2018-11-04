@@ -99,4 +99,4 @@ namespace STLContainer {
     void swap( Stack<T, Container>& lhs, Stack<T, Container>& rhs ) noexcept {
         lhs.swap( rhs );
     }
-} // namespace algorithm
+} // namespace
