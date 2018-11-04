@@ -8,7 +8,7 @@
 
 const static char * STRING_VERSION = "0.0.1";
 
-namespace Container {
+namespace STLContainer {
     class String;
 
     void swap(String & str1, String & str2) noexcept;
@@ -154,29 +154,29 @@ namespace Container {
     /******************comparison operators******************/
 
     //Comparison operators
-    inline bool operator==(const Container::String& lhs, const Container::String& rhs) {
-        if(strncmp(lhs.c_str(), rhs.c_str(), Container::String::MAX_LENGTH) == 0) return true;
+    inline bool operator==(const STLContainer::String& lhs, const STLContainer::String& rhs) {
+        if(strncmp(lhs.c_str(), rhs.c_str(), STLContainer::String::MAX_LENGTH) == 0) return true;
         return false;
     }
 
-    inline bool operator!=(const Container::String& lhs, const Container::String& rhs) {
+    inline bool operator!=(const STLContainer::String& lhs, const STLContainer::String& rhs) {
         return !operator==(lhs, rhs);
     }
 
-    inline bool operator< (const Container::String& lhs, const Container::String& rhs) {
-        if(strncmp(lhs.c_str(), rhs.c_str(), Container::String::MAX_LENGTH) < 0) return true;
+    inline bool operator< (const STLContainer::String& lhs, const STLContainer::String& rhs) {
+        if(strncmp(lhs.c_str(), rhs.c_str(), STLContainer::String::MAX_LENGTH) < 0) return true;
         return false;
     }
 
-    inline bool operator> (const Container::String& lhs, const Container::String& rhs) {
+    inline bool operator> (const STLContainer::String& lhs, const STLContainer::String& rhs) {
         return operator<(rhs, lhs);
     }
 
-    inline bool operator<=(const Container::String& lhs, const Container::String& rhs) {
+    inline bool operator<=(const STLContainer::String& lhs, const STLContainer::String& rhs) {
         return !operator>(lhs, rhs);
     }
 
-    inline bool operator>=(const Container::String& lhs, const Container::String& rhs) {
+    inline bool operator>=(const STLContainer::String& lhs, const STLContainer::String& rhs) {
         return !operator<(lhs, rhs);
     }
 

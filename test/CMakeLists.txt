@@ -4,7 +4,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES GNU)
 endif()
 
 
-file(GLOB TEST_FILES ${PROJECT_SOURCE_DIR}/test/string/*.cpp)
+file(GLOB TEST_FILES
+        ${PROJECT_SOURCE_DIR}/test/string/*.cpp
+        ${PROJECT_SOURCE_DIR}/test/stack/*.cpp)
 
 
 add_executable(unittest_container unit_tests.cpp ${TEST_FILES})
