@@ -15,7 +15,7 @@ script:
   - sh build.sh
 
 after_success:
-  - coveralls --root .. -E ".*external.*" -E ".*build.*" -E ".*CMakeFiles.*" -E ".*test/.*.cpp.*"
+  - coveralls --root .. -E ".*external.*" -E ".*googletest.*" -E ".*CMakeFiles.*" -E ".*test/.*.cpp.*"
 
 notifications:
   email: false
