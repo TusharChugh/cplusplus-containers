@@ -16,7 +16,7 @@ namespace STLContainer {
         };
 
         std::unique_ptr<TrieNode> startNode;
-        
+
     public:
         /** Initialize */
         Trie();
