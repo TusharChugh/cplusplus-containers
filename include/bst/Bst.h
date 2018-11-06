@@ -17,6 +17,7 @@
 #pragma once
 
 #include <memory>
+#include <queue>
 
 namespace STLContainer {
 
@@ -350,8 +351,19 @@ namespace STLContainer {
         }
 
         void copy_bst( const bst& other ) {
-            for ( const auto& ot : other )
-                insert( ot );
+            // Do bfs to copy
+            auto root = other.root_.get();
+            std::queue<node_raw_pointer> fringe;
+            fringe.push(root);
+            while(!fringe.empty()) {
+                auto current = fringe.front();
+                fringe.pop();
+                insert(current->value_);
+                if(current->left_)
+                    fringe.push(current->left_.get());
+                if(current->right_)
+                    fringe.push(current->right_.get());
+            }
         }
     };
 }
