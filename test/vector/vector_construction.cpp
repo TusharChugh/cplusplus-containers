@@ -137,3 +137,23 @@ TEST(VECTOR, CLEAR){
     input.clear();
     ASSERT_EQ(refer_input.capacity(), input.capacity());
 }
+
+TEST(VECTTOR, VECTOR_ITERATOR) {
+    std::vector<int> refer_input = {11,3,4,9,12};
+    STLContainer::Vector<int> input = {11,3,4,9,12};
+    size_t ref_index = 0;
+    for(const auto& num: input) {
+        ASSERT_EQ(refer_input[ref_index++], num);
+    }
+}
+
+TEST(VECTOR, SORT){
+    std::vector<int> refer_input = {11,3,4,9,12};
+    STLContainer::Vector<int> input = {11,3,4,9,12};
+    std::sort(refer_input.begin(), refer_input.end());
+    std::sort(input.begin(), input.end());
+    size_t ref_index = 0;
+    for(const auto& num: input) {
+        ASSERT_EQ(refer_input[ref_index++], num);
+    }
+}
