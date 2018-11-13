@@ -1,369 +1,374 @@
-/**
- * @brief Simple templatized bst implementation
- * Happiness is a tree with a unique pointer
- * TODO: -- operator, erase, emplace
- * References
- * 1. Leak-Freedom in C++... By default - HERB SUTTER
- * 2. LLVM STL set implementation
- * 3. Only implemented const_iterator with iterator alias (this choice limits the use of std::copy
- * for initializer_list and copy constructor)
- * we can use pointer as the template argument in order to support iterator and const_iterator
- * 4. Default destructor would take H (height of tree) space on the stack. This is not a effective
- * way, use the suggestion from Herb Sutter's cppconn talk
- * @file bst.h
- * @author Tushar Chugh
- */
-
-#pragma once
-
+# pragma once
+#include <functional>
 #include <memory>
+#include <iterator>
 #include <queue>
+#include <initializer_list>
 
-namespace STLContainer {
+namespace STLContainer{
 
-/**
- * @brief bst node used by binary search tree (bst)
- *
- * @tparam T typename of type T
- */
-    template <typename T> class bst_node {
-    public:
-        using value_type       = T;
-        using node_pointer     = typename std::unique_ptr<bst_node>;
-        using node_raw_pointer = bst_node*;
-        using const_reference  = const T&;
+        // define the nested class bst_node
+    struct bst_node{
+          // type definition
+          using node_pointer  = bst_node*;
 
-        explicit bst_node( const value_type& value = value_type{} )
-                : value_{value}, left_{nullptr}, right_{nullptr}, parent_{nullptr} {}
+          int _value;
+          node_pointer  _parent;
+          node_pointer  _left;
+          node_pointer  _right;
 
-        explicit bst_node( const value_type& value, node_raw_pointer parent )
-                : value_{value}, left_{nullptr}, right_{nullptr}, parent_{parent} {}
+          explicit bst_node(const int value = {}) : _value(value), _parent(nullptr), _left(nullptr), _right(nullptr){};
+      };
 
-        ~bst_node() = default;
+    class bst_iterator:public std::iterator<
+            std::bidirectional_iterator_tag, //iterator category
+            int, //value type
+            int, // difference_type
+            const int*, // pointer;
+            int  //reference
+                >
+    {
+         friend class bst;
 
-        value_type value_;
-        node_pointer left_;
-        node_pointer right_;
-        node_raw_pointer parent_;
-    };
+     private:
+         using node_pointer  = typename bst_node::node_pointer;
 
-/**
- * @brief iterator for the bst
- *
- * @tparam bst_node_t node of type bst
- */
-    template <typename bst_node_t>
-    class bst_iterator : public std::iterator<const std::bidirectional_iterator_tag, bst_node_t*> {
-    private:
-        using node_pointer = typename bst_node_t::node_raw_pointer;
+     public:
 
-        node_pointer tree_min( node_pointer x ) noexcept {
-            while ( x->left_ != nullptr ) {
-                x = ( x->left_ ).get();
+         // Dereference
+         const int& operator* () const {
+             return _pointee->_value;
+         }
+
+         node_pointer  operator-> (){return _pointee;}
+
+         bst_iterator& operator++ (){
+             _pointee = _tree_next(_pointee);
+             return *this;
+         }
+
+         bst_iterator operator++ (int){
+             auto temp = bst_iterator(_pointee);
+             ++(*this);
+             return temp;
+         }
+
+         bst_iterator& operator-- (){
+             _pointee = _tree_prev(_pointee);
+             return *this;
+         }
+
+         bst_iterator operator-- (int){
+             auto temp =  bst_iterator(_pointee);
+             --(*this);
+             return temp;
+         }
+
+         // return the smallest element in the bst
+         // @brief Returns if the the two iterators lhs and rhs are not equal
+         // @param lhs first iterator
+         // @param rhs second iterator
+         // @return true if lhs is not equal to rhs
+         // @return false if lhs is equal to rhs
+         friend bool operator!=( const bst_iterator& lhs, const bst_iterator& rhs ) {
+             return lhs._pointee != rhs._pointee;
+         }
+         // @brief Returns if the the two iterators lhs and rhs are equal
+         // @param lhs first iterator
+         // @param rhs second iterator
+         // @return true if lhs is equal to rhs
+         // @return false if lhs is not equal to rhs
+         friend bool operator==( const bst_iterator& lhs, const bst_iterator& rhs ) {
+             return !( lhs != rhs );
+         }
+        private:
+            node_pointer _pointee;
+            explicit bst_iterator(const node_pointer pointee = nullptr): _pointee(pointee){};
+            // @help functions for iterator behavior
+            // @brief Helper function to find if node is the left child of the parent
+            // @param _NodePtr input node
+            // @return true if the node is left child of the parent
+            // @return false if node is not the left child of the parent
+            bool _tree_is_left_child(node_pointer _NodePtr) noexcept {
+                return _NodePtr == _NodePtr->_parent->_left;
             }
-            return x;
-        }
 
-        node_pointer tree_max( node_pointer x ) noexcept {
-            while ( x->right_ != nullptr ) {
-                x = ( x->right_ ).get();
+            node_pointer _tree_min(node_pointer _NodePtr) noexcept{
+                while (_NodePtr->_left!= nullptr) {
+                    _NodePtr = _NodePtr->_left;
+                }
+                return _NodePtr;
             }
-            return x;
-        }
+            // get the successor of the given node
+            node_pointer _tree_next(node_pointer _NodePtr) noexcept {
+                // Case 1: get the left most child of its right subtree,
+                // find the minimum of its right subtree
+                if (_NodePtr->_right!= nullptr)
+                    return _tree_min(_NodePtr->_right);
+                    // case 2, no right subtree, if the node is NOT left child of its parent
+                    // back track, unitl NodePtr hits a (parent) node which is the left child of
+                    // its parent
+                while(!_tree_is_left_child(_NodePtr)) {
+                    _NodePtr = _NodePtr->_parent;
+                }
+                    // case 3, no right subtree, if the node is left child of its parent
+                    // return its parent
+                    return _NodePtr->_parent;
+                }
 
-        bool is_left_child( node_pointer x ) noexcept {
-            return ( x == ( ( x->parent_ )->left_ ).get() );
-        }
+            node_pointer _tree_max(node_pointer _NodePtr) noexcept{
+                while (_NodePtr->_right!= nullptr) {
+                    _NodePtr = _NodePtr->_right;
+                }
+                return _NodePtr;
+            }
 
-        node_pointer successor( node_pointer x ) noexcept {
-            if ( ( x->right_ ) != nullptr ) return tree_min( ( x->right_ ).get() );
-            while ( !is_left_child( x ) )
-                x = ( x->parent_ );
-            return ( x->parent_ );
-        }
-
-    public:
-        using value_type        = typename bst_node_t::value_type;
-        using iterator_category = const std::bidirectional_iterator_tag;
-        using const_reference   = typename bst_node_t::const_reference;
-
-        template <typename value_type> friend class bst;
-
-        const_reference operator*() const {
-            return pointee_->value_;
-        }
-
-        bst_iterator& operator++() {
-            pointee_ = successor( pointee_ );
-            return *this;
-        }
-
-        bst_iterator operator++( int ) {
-            auto temp = *this;
-            ++( *this );
-            return temp;
-        }
-
-        friend bool operator!=( const bst_iterator& lhs, const bst_iterator& rhs ) {
-            return lhs.pointee_ != rhs.pointee_;
-        }
-
-        friend bool operator==( const bst_iterator& lhs, const bst_iterator& rhs ) {
-            return !( lhs != rhs );
-        }
-
-        ~bst_iterator() = default;
-
-    private:
-        node_pointer pointee_;
-
-        explicit bst_iterator( const node_pointer& pointee = nullptr ) : pointee_( pointee ) {}
-    };
-
-/**
- * @brief implementation of the bst
- *
- * @tparam Key Key
- */
-    template <typename Key> class bst {
-    public:
-        using value_type       = Key;
-        using pointer          = typename std::unique_ptr<Key>;
-        using const_pointer    = const std::unique_ptr<Key>;
-        using reference        = Key&;
-        using const_reference  = const Key&;
-        using size_type        = std::size_t;
-        using node_type        = bst_node<Key>;
-        using const_node_type  = const bst_node<Key>;
-        using node_pointer     = typename node_type::node_pointer;
-        using iterator         = bst_iterator<node_type>;
-        using node_raw_pointer = typename node_type::node_raw_pointer;
+            node_pointer _tree_prev(node_pointer _NodePtr) noexcept{
+                if(_NodePtr->_left!= nullptr)
+                    return _tree_max(_NodePtr);
+                while(_tree_is_left_child(_NodePtr)) {
+                    _NodePtr = _NodePtr->_parent;
+                }
+                return _NodePtr->_parent;
+            }
+        };
+    class bst{
 
     public:
-        bst() : root_{std::make_unique<node_type>( value_type{} )}, end_( root_.get() ), size_{0} {}
+        // type definition
+        using node_pointer      =   typename bst_node::node_pointer;
+        using iterator          =   bst_iterator;
+        using const_iterator    =   const iterator;
 
-        bst( const bst& other )
-                : root_{std::make_unique<node_type>( value_type{} )}, end_( root_.get() ), size_{0} {
-            copy_bst( other );
+        //construct, deconstruct
+        explicit bst() :_root{make_node(int{})}, _size(0),_end(_root){}
+        // copy construct
+        bst(const bst& other):_root(make_node(int{})), _size(0),_end(_root){
+            bst_copy(other);
+        }
+        // move construct
+        bst(bst&& other):_root(std::move(other._root)), _size(other._size),
+                           _end(other._end){
+            other._root = nullptr;
+            other._size = 0;
+            other._end = nullptr;
         }
 
-        bst( bst&& other ) noexcept
-                : root_{std::move( other.root_ )}, end_( other.end_ ), size_{other.size_} {
-            other.root_ = nullptr;
-            other.end_  = nullptr;
-            other.size_ = 0;
-        }
-
-        bst( std::initializer_list<value_type> init )
-                : root_{std::make_unique<node_type>( value_type{} )}, end_( root_.get() ), size_{0} {
-            for ( const auto& in : init )
-                insert( in );
-        }
-
-        std::pair<iterator, bool> insert( const value_type& value ) {
-            return insert_iterative( value );
-        }
-
-        std::pair<iterator, bool> insert( value_type&& value ) {
-            return insert_iterative( std::forward<value_type>( value ) );
-        }
-
-        iterator find( const_reference key ) {
-            return search_value( key );
-        }
-
-        iterator erase( iterator pos ) {
-            return erase_value( pos );
-        }
-
-        // size_type erase( const_reference key ) {
-        //     erase( find( key ) );
-        //     return size_;
-        // }
-
-        size_type size() const noexcept {
-            return size_;
-        }
-
-        bool empty() const noexcept {
-            return size_ == 0;
-        }
-
-        iterator begin() const noexcept {
-            return make_iterator( tree_min( root_.get() ) );
-        }
-
-        iterator end() const noexcept {
-            return make_iterator( end_ );
-        }
-
-        bst& operator=( const bst& other ) {
-            root_ = std::make_unique<node_type>( value_type{} );
-            end_  = root_.get();
-            size_ = 0;
-            copy_bst( other );
-        }
-
-        bst& operator=( bst&& other ) {
-            root_       = std::make_unique<node_type>( value_type{} );
-            end_        = root_.get();
-            size_       = 0;
-            other.root_ = nullptr;
-            other.end_  = nullptr;
-            other.size_ = 0;
-        }
-
-        node_raw_pointer root() const noexcept {
-            return root_.get();
-        }
-
-        node_raw_pointer end_pointer() const noexcept {
-            return end_;
+        // initializer construct
+        bst(std::initializer_list<int> init):_root(make_node(int{})),_size(0),_end(_root){
+            for (auto &num:init){
+                auto pair = insert(num);
+            }
         }
 
         ~bst() = default;
 
+        // capacity
+        size_t size() const noexcept {return _size;}
+
+        bool empty(){return !(_size);}
+
+        // modifier:
+        std::pair<iterator, bool> insert(int value){
+            auto current_node  = _root;
+
+            if (current_node == _end) {
+                auto new_node = make_node(value);
+                new_node->_right = std::move(_root);
+                _root = std::move(new_node);
+                ++_size;
+                return std::make_pair<iterator,bool>(make_iterator(_root), true);
+            }
+
+            auto parent = current_node;// x will be pointing to the position where we insert the value
+            while ((current_node!= nullptr)&&(current_node!=_end)) {
+                    parent = current_node;
+                    if (current_node->_value > value)
+                        current_node = current_node->_left;
+                    else if (current_node->_value < value)
+                        current_node  = current_node->_right;
+                    else
+                        return std::make_pair<iterator, bool>(make_iterator(current_node), false);
+                }
+
+            auto new_node = make_node(value);
+
+            // current_node is a left leaf
+            if (parent->_value > value){
+                new_node->_parent = parent;
+                parent->_left = std::move(new_node);
+                ++_size;
+                return std::make_pair<iterator, bool>(make_iterator(parent->_left), true);
+                }
+            // current_node reaches to the _end
+            if (current_node == _end) {
+                new_node->_parent = parent;
+                new_node->_right = std::move(parent->_right);
+                parent->_right = std::move(new_node);
+                // update the _end
+                //_end = parent->_right->_right;
+                ++_size;
+                return std::make_pair<iterator, bool>(make_iterator(parent->_right), true);
+            }
+            // current node is a right leaf, but not reaches to _end;
+            else {
+                new_node->_parent = parent;
+                parent->_right = std::move(new_node);
+                ++_size;
+                return std::make_pair<iterator, bool>(make_iterator(parent->_right), true);
+            }
+        }
+
+        // find an element with key equivalent to key.
+        iterator find(int key) const
+        {
+            if(!_root) return make_iterator(_root);
+            else{
+                auto node = _root;
+                while(node!= _end){
+                 if(node->_value > key)
+                     node= node->_left;
+                 else if(node->_value < key)
+                     node= node->_right;
+                 else if (node->_value == key)
+                     return make_iterator(node);
+                }
+            return make_iterator(_end);
+            }
+        }
+
+        iterator begin() noexcept{
+            auto NodePtr = _tree_min(_root);// O(log(n))
+            return make_iterator(NodePtr);
+        }
+
+
+        iterator end() noexcept{
+//            auto NodePtr = _tree_max(_root);// O(log(n))
+//            return make_iterator(NodePtr);
+            return make_iterator(_end);
+        }
+
+        //Iterator following the last removed element.
+        iterator erase(iterator pos){
+            //auto pos_successor = ++pos;
+            // case 1 pos is the leaf, just deleted, update its parent's left and right
+            if ((pos->_left == nullptr)&&(pos->_right == nullptr)){
+                if (*pos < (pos->_parent->_value))
+                    pos->_parent->_left  = nullptr;
+                else
+                    pos->_parent->_right = nullptr;
+
+                --_size;
+                return  ++pos;
+                }
+
+            // case 2 pos has ONLY one child, we need to by pass iterator pos, and link its parent
+            // and its children directly.
+            if ((pos->_left!= nullptr)&&(pos->_right == nullptr)){
+                if (_tree_is_left_child(pos->_left->_parent))
+                   pos->_parent->_left = pos->_left;
+                else
+                    pos->_parent->_right = pos->_left;
+
+                pos->_left->_parent = pos->_parent;
+                --_size;
+                return ++pos;
+            }
+            if ((pos->_left == nullptr)&&(pos->_right != nullptr)){
+                if (_tree_is_left_child(pos->_right->_parent))
+                    pos->_parent->_left = pos->_right;
+                else
+                    pos->_parent->_right = pos->_right;
+
+                pos->_right->_parent = pos->_parent;
+                --_size;
+                return ++pos;
+            }
+            // case 3 pos has TWO children, we need to replace it with its successor
+            // recursively call it
+            else{
+                auto pos_current = pos++;
+                auto pos_succ = pos;
+                pos_current->_value = pos_succ->_value; // just replace the value;
+                auto temp = erase(pos);
+                --_size;
+                return pos_succ;
+            }
+        }
+
     private:
-        node_pointer root_;
-        node_raw_pointer end_;
-        size_type size_;
+        node_pointer  _root;
+        size_t _size;
+        node_pointer _end;
+        // @brief Helper function to find if node is the left child of the parent
+        // @param x_ input node
+        // @return true if the node is left child of the parent
+        // @return false if node is not the left child of the parent
 
-        iterator make_iterator( node_raw_pointer input ) const noexcept {
-            return bst_iterator<node_type>( input );
+        bool _tree_is_left_child(node_pointer _NodePtr) const noexcept
+        {
+            return _NodePtr == _NodePtr->_parent->_left;
         }
 
-        std::pair<iterator, bool> insert_iterative( const value_type& value ) {
-            auto current_node = root_.get();
-            if ( current_node == end_ ) {
-                auto new_root    = std::make_unique<node_type>( value );
-                new_root->right_ = std::move( root_ );
-                root_            = std::move( new_root );
-                ++size_;
-                return std::make_pair<iterator, bool>( make_iterator( root_.get() ), true );
+        node_pointer _tree_min(node_pointer _NodePtr) const noexcept{
+            while (_NodePtr->_left!= nullptr) {
+                _NodePtr = _NodePtr->_left;
             }
-
-            auto parent = current_node;
-
-            while ( current_node != nullptr && current_node != end_ ) {
-                parent = current_node;
-                if ( value < current_node->value_ )
-                    current_node = ( current_node->left_ ).get();
-                else if ( value > current_node->value_ )
-                    current_node = ( current_node->right_ ).get();
-                else
-                    return std::make_pair<iterator, bool>( make_iterator( current_node ), false );
-                ;
-            }
-            ++size_;
-
-            if ( value < parent->value_ ) {
-                parent->left_ = std::make_unique<node_type>( value, parent );
-                return std::make_pair<iterator, bool>( make_iterator( parent->left_.get() ), true );
-            }
-
-            else {
-                if ( current_node == end_ ) {
-                    auto new_node    = std::make_unique<node_type>( value, parent );
-                    new_node->right_ = std::move( parent->right_ );
-                    parent->right_   = std::move( new_node );
-                    end_             = ( ( parent->right_ )->right_ ).get();
-                }
-
-                else {
-                    parent->right_ = std::make_unique<node_type>( value, parent );
-                }
-                return std::make_pair<iterator, bool>( make_iterator( parent->right_.get() ), true );
-            }
+            return _NodePtr;
         }
 
-        std::pair<iterator, bool> insert_iterative( value_type&& value ) {
-            auto current_node = root_.get();
-            if ( current_node == end_ ) {
-                auto new_root    = std::make_unique<node_type>( std::forward<value_type>( value ) );
-                new_root->right_ = std::move( root_ );
-                root_            = std::move( new_root );
-                ++size_;
-                return std::make_pair<iterator, bool>( make_iterator( root_.get() ), true );
+        // get the successor of the given node
+        node_pointer _tree_next(node_pointer _NodePtr) const noexcept {
+            // Case 1: get the left most child of its right subtree,
+            // find the minimum of its right subtree
+            if (_NodePtr->_right!= nullptr)
+                return _tree_min(_NodePtr->_right);
+            // case 2, no right subtree, if the node is NOT left child of its parent
+            // back track, until NodePtr hits a (parent) node which is the left child of
+            // its parent
+            while(!_tree_is_left_child(_NodePtr)) {
+                _NodePtr = _NodePtr->_parent;
             }
-
-            auto parent = current_node;
-
-            while ( current_node != nullptr && current_node != end_ ) {
-                parent = current_node;
-                if ( value < current_node->value_ )
-                    current_node = ( current_node->left_ ).get();
-                else if ( value > current_node->value_ )
-                    current_node = ( current_node->right_ ).get();
-                else
-                    return std::make_pair<iterator, bool>( make_iterator( current_node ), false );
-                ;
-            }
-            ++size_;
-
-            if ( value < parent->value_ ) {
-                parent->left_ =
-                        std::make_unique<node_type>( std::forward<value_type>( value ), parent );
-                return std::make_pair<iterator, bool>( make_iterator( parent->left_.get() ), true );
-            }
-
-            else {
-                if ( current_node == end_ ) {
-                    auto new_node =
-                            std::make_unique<node_type>( std::forward<value_type>( value ), parent );
-                    new_node->right_ = std::move( parent->right_ );
-                    parent->right_   = std::move( new_node );
-                    end_             = ( ( parent->right_ )->right_ ).get();
-                }
-
-                else {
-                    parent->right_ =
-                            std::make_unique<node_type>( std::forward<value_type>( value ), parent );
-                }
-                return std::make_pair<iterator, bool>( make_iterator( parent->right_.get() ), true );
-            }
+            // case 3, no right subtree, if the node is left child of its parent
+            // return its parent
+            return _NodePtr->_parent;
         }
 
-        node_raw_pointer tree_min( node_raw_pointer x ) const noexcept {
-            while ( x->left_ != nullptr ) {
-                x = ( x->left_ ).get();
+        node_pointer _tree_max(node_pointer _NodePtr) const noexcept{
+            while (_NodePtr->_right!= nullptr) {
+                _NodePtr = _NodePtr->_right;
             }
-            return x;
+            return _NodePtr;
         }
 
-        node_raw_pointer tree_max( node_raw_pointer x ) const noexcept {
-            while ( x->right_ != nullptr ) {
-                x = ( x->right_ ).get();
+        node_pointer _tree_prev(node_pointer _NodePtr) const noexcept{
+            if(_NodePtr->_left!= nullptr)
+                return _tree_max(_NodePtr);
+            while(_tree_is_left_child(_NodePtr)) {
+                _NodePtr = _NodePtr->_parent;
             }
-            return x;
+            return _NodePtr->_parent;
         }
 
-        iterator search_value( const_reference value ) const noexcept {
-            auto current_node = root_.get();
-            while ( current_node != nullptr && current_node != end_ ) {
-                if ( current_node->value_ == value )
-                    return make_iterator( current_node );
-                else if ( value < current_node->value_ )
-                    current_node = ( current_node->left_ ).get();
-                else if ( value > current_node->value_ )
-                    current_node = ( current_node->right_ ).get();
-            }
-            return make_iterator( end_ );
+        iterator make_iterator (node_pointer _NodePtr) const noexcept{
+            return iterator(_NodePtr);// move construct;
         }
 
-        void copy_bst( const bst& other ) {
-            // Do bfs to copy
-            auto root = other.root_.get();
-            std::queue<node_raw_pointer> fringe;
-            fringe.push(root);
-            while(!fringe.empty()) {
+        void bst_copy(const bst& other){
+            std::queue<node_pointer> fringe;
+            fringe.emplace(other._root);
+            while(!fringe.empty()){
                 auto current = fringe.front();
                 fringe.pop();
-                insert(current->value_);
-                if(current->left_)
-                    fringe.push(current->left_.get());
-                if(current->right_)
-                    fringe.push(current->right_.get());
+                auto pair = insert(current->_value);
+                if(current->_left!= nullptr) fringe.emplace(current->_left);
+                if(current->_right!= nullptr) fringe.emplace(current->_right);
             }
+        }
+
+        bst_node* make_node(int value) {
+            return new bst_node(value);
         }
     };
 }
