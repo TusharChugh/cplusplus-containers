@@ -28,7 +28,7 @@ TEST(FORWARD_LIST, ITERATOR_PLUS) {
     int_list.push_front(2);
 
     std::forward_list<int> ref_int_list;
-    ref_int_list.push_front(
+    ref_int_list.push_front(1);
     ref_int_list.push_front(2);
 
     STLContainer::forward_list<int>::iterator list_iterator = int_list.begin();
