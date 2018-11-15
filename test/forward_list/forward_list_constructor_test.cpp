@@ -10,6 +10,8 @@ TEST(FORWARD_LIST, INTTEST) {
         ASSERT_EQ(i, int_list.front());
     }
 }
+
+
 TEST(FORWARD_LIST, INTTEST1) {
     STLContainer::forward_list<int> int_list;
     int_list.push_front(2);
@@ -18,6 +20,53 @@ TEST(FORWARD_LIST, INTTEST1) {
     int_list.pop_front();
     ASSERT_EQ(2, int_list.front());
 }
+
+TEST(FORWARD_LIST, COPY_CONSTRUCT) {
+    STLContainer::forward_list<int> int_list;
+    int_list.push_front(4);
+    int_list.push_front(3);
+    int_list.push_front(2);
+    int_list.push_front(1);
+
+    STLContainer::forward_list<int> int_list_copy(int_list);
+    ASSERT_EQ(1, int_list_copy.front());
+    int_list_copy.pop_front();
+    ASSERT_EQ(2, int_list_copy.front());
+    int_list_copy.pop_front();
+    ASSERT_EQ(3, int_list_copy.front());
+    int_list_copy.pop_front();
+    ASSERT_EQ(4, int_list_copy.front());
+}
+
+TEST(FORWARD_LIST, COPY_CONSTRUCT1) {
+    STLContainer::forward_list<int> int_list;
+    int_list.push_front(4);
+    int_list.push_front(3);
+
+    STLContainer::forward_list<int> int_list_copy(int_list);
+    ASSERT_EQ(3, int_list_copy.front());
+    int_list_copy.pop_front();
+    ASSERT_EQ(4, int_list_copy.front());
+}
+
+TEST(FORWARD_LIST, COPY_CONSTRUCT2) {
+    STLContainer::forward_list<int> int_list;
+    int_list.push_front(1);
+    STLContainer::forward_list<int> int_list_copy(int_list);
+    ASSERT_EQ(1, int_list_copy.front());
+}
+
+TEST(FORWARD_LIST, MOVE_CONSTRUCT) {
+    STLContainer::forward_list<int> int_list;
+    int_list.push_front(4);
+    int_list.push_front(3);
+
+    STLContainer::forward_list<int> int_list_copy(std::move(int_list));
+    ASSERT_EQ(3, int_list_copy.front());
+    int_list_copy.pop_front();
+    ASSERT_EQ(4, int_list_copy.front());
+}
+
 
 TEST(FORWARD_LIST, STRINGTEST) {
         std::forward_list<std::string> ref_string_list;

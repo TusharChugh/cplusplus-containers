@@ -20,6 +20,42 @@ namespace STLContainer {
         // construct/deconstruct
         explicit forward_list() : _head(make_node(value_type{}, nullptr)), _tail(_head){ };
 
+        forward_list (forward_list&& other) noexcept
+            :_head{std::move(other._head)}, _tail{std::move(other._tail)}{
+            other._head = nullptr;
+            other._tail = nullptr;
+        }
+
+//        forward_list (const forward_list& other):_head(make_node(value_type{}, nullptr)), _tail(_head){
+//            auto node_other = other._head->_next;
+//            auto last_node  = _head;
+//            _head->_value = other._head->_value;
+//
+//            while (node_other!=other._tail){
+//                auto new_node = make_node(node_other->_value, nullptr);
+//                last_node->_next = new_node;
+//                last_node->_next->_value = new_node->_value;
+//                last_node = last_node->_next;
+//                node_other= node_other->_next;
+//            }
+//            _tail = nullptr; // it is the tail now
+//        }
+
+        forward_list (const forward_list& other): _head(make_node(other._head->_value, nullptr)), _tail(_head){
+
+            auto node_other = other._head->_next;
+            auto last_node = _head;
+            while(node_other!=other._tail){
+                auto new_node = make_node(node_other->_value, nullptr);
+                last_node->_next = new_node;
+                last_node = new_node;
+                node_other = node_other->_next;
+            }
+            _tail = make_node(value_type{}, nullptr);
+            last_node->_next = _tail;
+        }
+
+
         // define the customized container behavior
         ~forward_list() = default;
 
