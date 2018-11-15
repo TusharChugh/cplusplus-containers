@@ -17,18 +17,22 @@ namespace STLContainer{
         Container _container;
 
     public:
-        queue(): queue(Container()){};// default constuct
+        queue(): queue(Container()){};
 
-        queue(const Container& container): _container(container){};
+        explicit queue(const Container& container): _container(container){}
+
+        explicit queue(Container&& container): _container(std::move(container)){};
 
         queue(const queue& other):_container(other._container){};
 
         queue(queue&& other):_container(std::move(other._container)){};
 
         queue& operator = (const queue& other){
-            this->_container = other._container;
+            _container = other._container;
             return *this;
         }
+
+        ~queue()  = default;
 
         // modifier
         void push(const value_type& value){
