@@ -55,21 +55,3 @@ TEST(FORWARD_LIST, ITERATOR_PLUS_POST) {
         ASSERT_EQ(*ref_list_iterator, *list_iterator);
     }
 }
-
-TEST(FORWARD_LIST, AUTO_ITERATOR_AU_Test) {
-    STLContainer::forward_list<int> int_list;
-    int_list.push_front(1);
-    int_list.push_front(2);
-    int_list.push_front(3);
-    int_list.push_front(4);
-    int_list.push_front(5);
-
-    std::forward_list<int> ref_int_list;
-    ref_int_list.push_front(1);
-    ref_int_list.push_front(2);
-    size_t ref_index = 0;
-
-    for(auto element: int_list) {
-        std::cout<<element<<" ";
-    }std::cout<<std::endl;
-}
