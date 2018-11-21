@@ -16,7 +16,8 @@ file(GLOB TEST_FILES
         ${PROJECT_SOURCE_DIR}/test/bst/*.cpp
         ${PROJECT_SOURCE_DIR}/test/trie/*.cpp
         ${PROJECT_SOURCE_DIR}/test/vector/*.cpp
-        ${PROJECT_SOURCE_DIR}/test/queue/*.cpp)
+        ${PROJECT_SOURCE_DIR}/test/queue/*.cpp
+        ${PROJECT_SOURCE_DIR}/test/forward_list/*.cpp)
 
 
 add_executable(unittest_container unit_tests.cpp ${TEST_FILES})
